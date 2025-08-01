@@ -1,7 +1,7 @@
 <template>
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
-      <h1>Ro'yhatdan o'tish 1</h1>
+      <h1>Ro'yhatdan o'tish 2</h1>
       <Inputs
         id="full-name"
         title="Ism Sharifingiz:"
@@ -42,12 +42,12 @@
 import Inputs from "./ui/Inputs.vue";
 import { onMounted, computed, reactive, watch, ref } from "vue";
 import { viloyat, tuman } from "../constants/regions";
-import { useEffect } from "react";
 
 const Telegram = window.Telegram.WebApp;
 
 onMounted(() => {
   Telegram.ready();
+  Telegram.onEvent("mainButtonClicked", JSON.stringify(user));
 });
 
 const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
