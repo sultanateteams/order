@@ -1,7 +1,7 @@
 <template>
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
-      <h1>Ro'yhatdan o'tish</h1>
+      <h1>Ro'yhatdan o'tish 1</h1>
       <Inputs
         id="full-name"
         title="Ism Sharifingiz:"
@@ -40,9 +40,15 @@
 
 <script lang="ts" setup>
 import Inputs from "./ui/Inputs.vue";
-import Selects from "./ui/Selects.vue";
-import { computed, reactive, watch, ref } from "vue";
+import { onMounted, computed, reactive, watch, ref } from "vue";
 import { viloyat, tuman } from "../constants/regions";
+import { useEffect } from "react";
+
+const Telegram = window.Telegram.WebApp;
+
+onMounted(() => {
+  Telegram.ready();
+});
 
 const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
 let district = ref([]);
@@ -81,12 +87,13 @@ const onSubmit = () => {
   districtON();
 };
 
-// USERga kuzatuv o‘rnatish
 watch(
   () => [user.fullName, user.viloyat, user.tuman],
   ([newName, newViloyat, newTuman]) => {
     if (newName.trim().length && newViloyat !== null && newTuman !== null) {
       console.log("✅ To‘liq maʼlumot:", JSON.parse(JSON.stringify(user)));
+      Telegram.MainButton.text = "Register";
+      Telegram.MainButton.show();
     }
   }
 );
