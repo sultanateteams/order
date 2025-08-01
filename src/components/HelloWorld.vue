@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
       <h1>Ro'yhatdan o'tish</h1>
       <Inputs
@@ -34,62 +34,59 @@
           required
         ></b-form-select>
       </b-form-group>
-
-      <b-button type="submit" variant="primary">Yuborish</b-button>
     </b-form>
   </div>
 </template>
 
 <script lang="ts" setup>
-import Inputs from './ui/Inputs.vue';
-import Selects from './ui/Selects.vue';
-import { computed, reactive, watch , ref} from 'vue';
-import { viloyat, tuman } from '../constants/regions';
+import Inputs from "./ui/Inputs.vue";
+import Selects from "./ui/Selects.vue";
+import { computed, reactive, watch, ref } from "vue";
+import { viloyat, tuman } from "../constants/regions";
 
-const region = viloyat.map((el) => ({...el, value: el.id, text: el.name1}))
-let district = ref([])
+const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
+let district = ref([]);
 
 const districtON = () => {
   district.value = tuman
     .filter((el) => el.int01 == user.viloyat)
-    .map((el) => ({ value: el.id, text: el.name1 }))
-}
+    .map((el) => ({ value: el.id, text: el.name1 }));
+};
 
-console.log(viloyat, tuman)
+console.log(viloyat, tuman);
 
 const user = reactive({
-  fullName: '',
-  fullAddress: '',
+  fullName: "",
+  fullAddress: "",
   viloyat: null,
   tuman: null,
 });
 
 const regionData = computed(() => {
-  if(!!user.viloyat){
-    return viloyat.filter((el) => el.id == user.viloyat)[0]
-  }else{
-    return {}
+  if (!!user.viloyat) {
+    return viloyat.filter((el) => el.id == user.viloyat)[0];
+  } else {
+    return {};
   }
-})
+});
 
-watch(() => user.viloyat, () => {
-  districtON()
-})
+watch(
+  () => user.viloyat,
+  () => {
+    districtON();
+  }
+);
 
 const onSubmit = () => {
-    districtON()
+  districtON();
 };
 
 // USERga kuzatuv o‘rnatish
 watch(
   () => [user.fullName, user.viloyat, user.tuman],
   ([newName, newViloyat, newTuman]) => {
-    if (
-      newName.trim().length &&
-      newViloyat !== null &&
-      newTuman !== null
-    ) {
-      console.log('✅ To‘liq maʼlumot:', JSON.parse(JSON.stringify(user)));
+    if (newName.trim().length && newViloyat !== null && newTuman !== null) {
+      console.log("✅ To‘liq maʼlumot:", JSON.parse(JSON.stringify(user)));
     }
   }
 );
