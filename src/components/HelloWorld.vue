@@ -47,7 +47,10 @@ const Telegram = window.Telegram.WebApp;
 
 onMounted(() => {
   Telegram.ready();
-  Telegram.onEvent("mainButtonClicked", JSON.stringify(user));
+
+  Telegram.onEvent("mainButtonClicked", () => {
+    Telegram.sendData(JSON.stringify(user));
+  });
 });
 
 const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
