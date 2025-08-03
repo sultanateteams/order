@@ -56,9 +56,7 @@ onMounted(() => {
 
     const payload = JSON.stringify({ user, queryId });
     
-    if (!queryId) {
-      return res.status(400).json({ error: "Missing queryId" });
-    }
+  
     if (queryId) {
       fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
         method: "POST",
