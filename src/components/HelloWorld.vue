@@ -94,7 +94,7 @@ watch(
   () => [user.fullName, user.viloyat, user.tuman],
   ([newName, newViloyat, newTuman]) => {
     if (newName.trim().length && newViloyat !== null && newTuman !== null) {
-      console.log("✅ To‘liq maʼlumot:", JSON.parse(JSON.stringify(user)));
+      console.log("✅ To‘liq ", JSON.parse(JSON.stringify(user)));
       Telegram.MainButton.text = "Register";
       Telegram.MainButton.show();
     }
