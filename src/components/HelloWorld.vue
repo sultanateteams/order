@@ -55,7 +55,7 @@ onMounted(() => {
     user.tumanInfo = tuman.filter((el) => user.tuman == el.id)[0];
 
     if (queryId) {
-      fetch("https://telegram-bota-da4625226d63.herokuapp.com/", {
+      fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
         method: "POST",
         headers: {
           "Content-Type": "aplication/json",
