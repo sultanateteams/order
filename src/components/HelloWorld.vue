@@ -49,9 +49,22 @@ onMounted(() => {
   Telegram.ready();
 
   Telegram.onEvent("mainButtonClicked", () => {
+    const queryId = Telegram.initDataUnsafe?.query.id;
+
     user.viloyatInfo = viloyat.filter((el) => user.viloyat == el.id)[0];
     user.tumanInfo = tuman.filter((el) => user.tuman == el.id)[0];
-    Telegram.sendData(JSON.stringify(user));
+
+    if (queryId) {
+      fetch("https:/localhost:8000/web-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "aplication/json",
+        },
+        body: JSON.stringify({ user, queryId }),
+      });
+    } else {
+      Telegram.sendData(JSON.stringify(user));
+    }
   });
 });
 
