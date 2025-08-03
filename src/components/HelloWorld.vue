@@ -49,6 +49,8 @@ onMounted(() => {
   Telegram.ready();
 
   Telegram.onEvent("mainButtonClicked", () => {
+    user.viloyatInfo = viloyat.filter((el) => user.viloyat == el.id)[0];
+    user.tumanInfo = tuman.filter((el) => user.tuman == el.id)[0];
     Telegram.sendData(JSON.stringify(user));
   });
 });
@@ -69,6 +71,8 @@ const user = reactive({
   fullAddress: "",
   viloyat: null,
   tuman: null,
+  viloyatInfo: {},
+  tumanInfo: {},
 });
 
 const regionData = computed(() => {
