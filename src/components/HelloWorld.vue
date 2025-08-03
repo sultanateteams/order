@@ -49,27 +49,29 @@ onMounted(() => {
   Telegram.ready();
 
   Telegram.onEvent("mainButtonClicked", () => {
-    const queryId = Telegram.initDataUnsafe?.query.id;
+    const queryId = Telegram.initDataUnsafe?.query_id;
 
-    user.viloyatInfo = viloyat.filter((el) => user.viloyat == el.id)[0];
-    user.tumanInfo = tuman.filter((el) => user.tuman == el.id)[0];
+    user.viloyatInfo = viloyat.find((el) => user.viloyat == el.id);
+    user.tumanInfo = tuman.find((el) => user.tuman == el.id);
+
+    const payload = JSON.stringify({ user, queryId });
 
     if (queryId) {
       fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
         method: "POST",
         headers: {
-          "Content-Type": "aplication/json",
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user, queryId }),
-      })
+        body: payload,
+      });
     } else {
-      Telegram.sendData(JSON.stringify(user));
+      Telegram.sendData(payload);
     }
   });
 });
 
 const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
-let district = ref([]);
+const district = ref([]);
 
 const districtON = () => {
   district.value = tuman
@@ -112,8 +114,10 @@ watch(
   ([newName, newViloyat, newTuman]) => {
     if (newName.trim().length && newViloyat !== null && newTuman !== null) {
       console.log("✅ To‘liq ", JSON.parse(JSON.stringify(user)));
-      Telegram.MainButton.text = "Register";
-      Telegram.MainButton.show();
+      if (Telegram.MainButton) {
+        Telegram.MainButton.text = "Register";
+        Telegram.MainButton.show();
+      }
     }
   }
 );
