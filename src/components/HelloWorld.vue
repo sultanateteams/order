@@ -61,7 +61,7 @@ onMounted(() => {
           "Content-Type": "aplication/json",
         },
         body: JSON.stringify({ user, queryId }),
-      });
+      })
     } else {
       Telegram.sendData(JSON.stringify(user));
     }
