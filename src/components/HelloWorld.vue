@@ -1,22 +1,26 @@
 <template>
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
-      <h1>Ro'yhatdan o'tish 2</h1>
+      <h1>Ro'yhatdan o'tish</h1>
       <Inputs
-        id="full-name"
-        title="Ism Sharifingiz:"
-        v-model="user.fullName"
+        type="text"
+        id="first-name"
+        title="Ism: (*majburiy)"
+        v-model="user.firstName"
+        :required="true"
+      />
+      <Inputs
+        type="text"
+        id="last-name"
+        title="Sharifingiz: (*majburiy)"
+        v-model="user.lastName"
         :required="true"
       />
 
-      <Inputs
-        id="full_address"
-        title="Yashash manzilingizni aniq kiriting (mahalla, ko'cha, uy, raqam)"
-        v-model="user.fullAddress"
-        :required="false"
-      />
-
-      <b-form-group label="Viloyatingizni tanlang:" label-for="viloyat">
+      <b-form-group
+        label="Viloyatingizni tanlang: (*majburiy)"
+        label-for="viloyat"
+      >
         <b-form-select
           id="viloyat"
           v-model="user.viloyat"
@@ -25,7 +29,7 @@
         ></b-form-select>
       </b-form-group>
 
-      <b-form-group label="Tumaningizni tanlang:" label-for="tuman">
+      <b-form-group label="Tumaningizni tanlang: (*majburiy)" label-for="tuman">
         <b-form-select
           id="tuman"
           v-model="user.tuman"
@@ -34,14 +38,48 @@
           required
         ></b-form-select>
       </b-form-group>
+
+      <Inputs
+        type="text"
+        id="full_address"
+        title="Yashash manzilingizni aniq kiriting (mahalla, ko'cha, uy, raqam) (*ixtiyoriy)"
+        v-model="user.fullAddress"
+        :required="false"
+      />
+      <Inputs
+        type="date"
+        id="birth-date"
+        title="Tug'ilgan kuningni kiriting (*ixtiyoriy)"
+        v-model="user.birthDate"
+        :required="false"
+      />
+      <Inputs
+        type="number"
+        id="postcode"
+        title="Po'chta indexingizni kiriting (*ixtiyoriy)"
+        v-model="user.postcode"
+        :required="false"
+      />
+
+      <MaskNumber
+        id="phone_number"
+        title="Telefon raqamingiz (*ixtiyoriy)"
+        v-model="user.phone_number"
+        :required="false"
+      />
     </b-form>
   </div>
 </template>
 
 <script lang="ts" setup>
-import Inputs from "./ui/Inputs.vue";
 import { onMounted, computed, reactive, watch, ref } from "vue";
+
+import Inputs from "./ui/Inputs.vue";
 import { viloyat, tuman } from "../constants/regions";
+import MaskNumber from "./ui/MaskNumber.vue";
+
+const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
+const district = ref([]);
 
 const Telegram = window.Telegram.WebApp;
 
@@ -55,8 +93,7 @@ onMounted(() => {
     user.tumanInfo = tuman.find((el) => user.tuman == el.id);
 
     const payload = JSON.stringify({ user, queryId });
-    
-  
+
     if (queryId) {
       fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
         method: "POST",
@@ -71,24 +108,23 @@ onMounted(() => {
   });
 });
 
-const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
-const district = ref([]);
-
 const districtON = () => {
   district.value = tuman
     .filter((el) => el.int01 == user.viloyat)
     .map((el) => ({ value: el.id, text: el.name1 }));
 };
 
-console.log(viloyat, tuman);
-
 const user = reactive({
-  fullName: "",
-  fullAddress: "",
+  firstName: "",
+  lastName: "",
   viloyat: null,
-  tuman: null,
   viloyatInfo: {},
+  tuman: null,
   tumanInfo: {},
+  fullAddress: "",
+  birthDate: "",
+  postcode: "",
+  phone_number: "",
 });
 
 const regionData = computed(() => {
@@ -111,7 +147,7 @@ const onSubmit = () => {
 };
 
 watch(
-  () => [user.fullName, user.viloyat, user.tuman],
+  () => [user.firstName, user.lastName, user.viloyat, user.tuman],
   ([newName, newViloyat, newTuman]) => {
     if (newName.trim().length && newViloyat !== null && newTuman !== null) {
       console.log("✅ To‘liq ", JSON.parse(JSON.stringify(user)));
