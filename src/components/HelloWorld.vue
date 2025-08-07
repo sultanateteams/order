@@ -8,7 +8,7 @@
         id="first-name"
         title="Ism: (*majburiy)"
         v-model="user.firstName"
-        v-if="requiredFields.find('firstName')"
+        v-if="requiredFields.includes('firstName')"
         :required="true"
       />
       <Inputs
@@ -16,28 +16,31 @@
         id="last-name"
         title="Sharifingiz: (*majburiy)"
         v-model="user.lastName"
-        v-if="requiredFields.find('lastName')"
+        v-if="requiredFields.includes('lastName')"
         :required="true"
       />
 
       <b-form-group
         label="Viloyatingizni tanlang: (*majburiy)"
         label-for="viloyat"
+        v-if="requiredFields.includes('viloyat')"
       >
         <b-form-select
           id="viloyat"
           v-model="user.viloyat"
           :options="region"
-          v-if="requiredFields.find('viloyat')"
           required
         ></b-form-select>
       </b-form-group>
 
-      <b-form-group label="Tumaningizni tanlang: (*majburiy)" label-for="tuman">
+      <b-form-group
+        label="Tumaningizni tanlang: (*majburiy)"
+        v-if="requiredFields.includes('tuman')"
+        label-for="tuman"
+      >
         <b-form-select
           id="tuman"
           v-model="user.tuman"
-          v-if="requiredFields.find('tuman')"
           :options="district"
           :disabled="!district.length"
           required
@@ -46,7 +49,7 @@
 
       <Inputs
         type="text"
-        v-if="requiredFields.find('fullAddress')"
+        v-if="requiredFields.includes('fullAddress')"
         id="full_address"
         title="Yashash manzilingizni aniq kiriting (mahalla, ko'cha, uy, raqam) (*ixtiyoriy)"
         v-model="user.fullAddress"
@@ -55,7 +58,7 @@
       <Inputs
         type="date"
         id="birth-date"
-        v-if="requiredFields.find('birthDate')"
+        v-if="requiredFields.includes('birthDate')"
         title="Tug'ilgan kuningni kiriting (*ixtiyoriy)"
         v-model="user.birthDate"
         :required="false"
@@ -63,7 +66,7 @@
       <Inputs
         type="number"
         id="postcode"
-        v-if="requiredFields.find('postcode')"
+        v-if="requiredFields.includes('postcode')"
         title="Po'chta indexingizni kiriting (*ixtiyoriy)"
         v-model="user.postcode"
         :required="false"
@@ -71,7 +74,7 @@
 
       <MaskNumber
         id="phone_number"
-        v-if="requiredFields.find('phone_number')"
+        v-if="requiredFields.includes('phone_number')"
         title="Telefon raqamingiz (*ixtiyoriy)"
         v-model="user.phone_number"
         :required="false"
