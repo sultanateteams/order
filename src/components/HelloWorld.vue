@@ -2,6 +2,7 @@
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
       <h1>Ro'yhatdan o'tish</h1>
+      {{ requiredFields }}
       <Inputs
         type="text"
         id="first-name"
@@ -83,6 +84,10 @@ const district = ref([]);
 
 const Telegram = window.Telegram.WebApp;
 
+const queryParams = new URLSearchParams(window.location.search);
+const requiredRaw = queryParams.get("required");
+const requiredFields = requiredRaw ? requiredRaw.split("|") : [];
+
 onMounted(() => {
   Telegram.ready();
 
@@ -106,6 +111,7 @@ onMounted(() => {
       Telegram.sendData(payload);
     }
   });
+  console.log('working site')
 });
 
 const districtON = () => {
