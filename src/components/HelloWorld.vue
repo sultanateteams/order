@@ -1,81 +1,92 @@
 <template>
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
-      <h1>Ro'yhatdan o'tish</h1>
+      <h1>Yuk Ma'lumotlari</h1>
+
       <Inputs
         type="text"
-        id="first-name"
-        title="Ism: (*majburiy)"
-        v-model="user.firstName"
-        v-if="requiredFields.includes('firstName')"
-        :required="true"
-      />
-      <Inputs
-        type="text"
-        id="last-name"
-        title="Sharifingiz: (*majburiy)"
-        v-model="user.lastName"
-        v-if="requiredFields.includes('lastName')"
+        id="owner_id"
+        title="Yuk egasi IDsi"
+        v-model="cargo.owner_id"
         :required="true"
       />
 
-      <b-form-group
-        label="Viloyatingizni tanlang: (*majburiy)"
-        label-for="viloyat"
-        v-if="requiredFields.includes('viloyat')"
-      >
-        <b-form-select
-          id="viloyat"
-          v-model="user.viloyat"
-          :options="region"
-          required
-        ></b-form-select>
-      </b-form-group>
-
-      <b-form-group
-        label="Tumaningizni tanlang: (*majburiy)"
-        v-if="requiredFields.includes('tuman')"
-        label-for="tuman"
-      >
-        <b-form-select
-          id="tuman"
-          v-model="user.tuman"
-          :options="district"
-          :disabled="!district.length"
-          required
-        ></b-form-select>
-      </b-form-group>
+      <Inputs
+        type="text"
+        id="user_cargo_id"
+        title="Foydalanuvchi yuk IDsi"
+        v-model="cargo.user_cargo_id"
+        :required="true"
+      />
 
       <Inputs
         type="text"
-        v-if="requiredFields.includes('fullAddress')"
-        id="full_address"
-        title="Yashash manzilingizni aniq kiriting (mahalla, ko'cha, uy, raqam) (*ixtiyoriy)"
-        v-model="user.fullAddress"
-        :required="false"
+        id="status"
+        title="Yuk holati"
+        v-model="cargo.status"
+        :required="true"
       />
       <Inputs
         type="date"
-        id="birth-date"
-        v-if="requiredFields.includes('birthDate')"
-        title="Tug'ilgan kuningni kiriting (*ixtiyoriy)"
-        v-model="user.birthDate"
-        :required="false"
-      />
-      <Inputs
-        type="number"
-        id="postcode"
-        v-if="requiredFields.includes('postcode')"
-        title="Po'chta indexingizni kiriting (*ixtiyoriy)"
-        v-model="user.postcode"
+        id="in_stage_china"
+        title="Xitoyga omborga kelgan vaqt"
+        v-model="cargo.in_stage_china"
         :required="false"
       />
 
-      <MaskNumber
-        id="phone_number"
-        v-if="requiredFields.includes('phone_number')"
-        title="Telefon raqamingiz (*ixtiyoriy)"
-        v-model="user.phone_number"
+      <Inputs
+        type="text"
+        id="stage_china_number"
+        title="Xitoy ombor nomi"
+        v-model="cargo.stage_china_number"
+        :required="false"
+      />
+
+      <Inputs
+        type="number"
+        id="barcode"
+        title="Shtrix-kod"
+        v-model="cargo.barcode"
+        :required="false"
+      />
+
+      <Inputs
+        type="date"
+        id="out_stage_china"
+        title="Xitoydan ombordan ketgan vaqt"
+        v-model="cargo.out_stage_china"
+        :required="false"
+      />
+
+      <Inputs
+        type="date"
+        id="in_stage_uzb"
+        title="O'zbekistonga kelgan vaqt"
+        v-model="cargo.in_stage_uzb"
+        :required="false"
+      />
+
+      <Inputs
+        type="text"
+        id="stage_number_uzbekistan"
+        title="O'zbekistondagi ombor nomi"
+        v-model="cargo.stage_number_uzbekistan"
+        :required="false"
+      />
+
+      <Inputs
+        type="date"
+        id="submitted_at"
+        title="Mijoz qabul qilgan vaqt"
+        v-model="cargo.submitted_at"
+        :required="false"
+      />
+
+      <Inputs
+        type="text"
+        id="submitted_by"
+        title="Mijozga bergan"
+        v-model="cargo.submitted_by"
         :required="false"
       />
     </b-form>
@@ -83,104 +94,69 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, computed, reactive, watch, ref } from "vue";
-
+import { reactive, onMounted, watch } from "vue";
 import Inputs from "./ui/Inputs.vue";
-import { viloyat, tuman } from "../constants/regions";
-import MaskNumber from "./ui/MaskNumber.vue";
-
-const region = viloyat
-  .map((el) => ({ ...el, value: el.number, text: el.name1 }))
-  .sort((a, b) => a.number - b.number);
-console.log(region);
-const district = ref([]);
 
 const Telegram = window.Telegram.WebApp;
 
-const queryParams = new URLSearchParams(window.location.search);
-const requiredRaw = queryParams.get("required");
-const requiredFields = requiredRaw
-  ? requiredRaw.split("|")
-  : [
-      "firstName",
-      "lastName",
-      "viloyat",
-      "viloyatInfo",
-      "tuman",
-      "tumanInfo",
-      "fullAddress",
-      "birthDate",
-      "postcode",
-      "phone_number",
-    ];
+const cargo = reactive({
+  owner_id: "",
+  user_cargo_id: "",
+  status: "",
+  in_stage_china: "",
+  stage_china_number: null,
+  barcode: null,
+  out_stage_china: "",
+  in_stage_uzb: "",
+  stage_number_uzbekistan: null,
+  submitted_at: "",
+  submitted_by: "",
+});
 
+// Payload yuborish funksiyasi
+const sendPayload = () => {
+  const queryId = Telegram.initDataUnsafe?.query_id;
+  const payload = JSON.stringify({ cargo, queryId });
+
+  if (queryId) {
+    fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: payload,
+    });
+  } else {
+    Telegram.sendData(payload);
+  }
+};
+
+// Telegram button tayyorlash
 onMounted(() => {
   Telegram.ready();
 
   Telegram.onEvent("mainButtonClicked", () => {
-    const queryId = Telegram.initDataUnsafe?.query_id;
-
-    user.viloyatInfo = viloyat.find((el) => user.viloyat == el.number);
-    user.tumanInfo = tuman.find((el) => user.tuman == el.number);
-
-    const payload = JSON.stringify({ user, queryId });
-
-    if (queryId) {
-      fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: payload,
-      });
-    } else {
-      Telegram.sendData(payload);
-    }
+    sendPayload();
   });
-  console.log("working site");
+
+  console.log("🚀 Yuk formasi tayyor");
 });
 
-const districtON = () => {
-  district.value = tuman
-    .filter((el) => el.parent_number == user.viloyat)
-    .map((el) => ({ value: el.number, text: el.name1 }))
-    .sort((a, b) => a.number - b.number);
-};
-
-const user = reactive({
-  firstName: "",
-  lastName: "",
-  viloyat: null,
-  viloyatInfo: {},
-  tuman: null,
-  tumanInfo: {},
-  fullAddress: "",
-  birthDate: "",
-  postcode: "",
-  phone_number: "",
-});
-
+// Tugma ko‘rsatish: faqat majburiy fieldlar to‘ldirilsa
 watch(
-  () => user.viloyat,
-  () => {
-    districtON();
-  }
-);
-
-const onSubmit = () => {
-  districtON();
-};
-
-watch(
-  () => [user.firstName, user.lastName, user.viloyat, user.tuman],
-  ([newName, newViloyat, newTuman]) => {
-    if (newName.trim().length && newViloyat !== null && newTuman !== null) {
-      console.log("✅ To‘liq ", JSON.parse(JSON.stringify(user)));
-      if (Telegram.MainButton) {
-        Telegram.MainButton.text = "Register";
-        Telegram.MainButton.show();
-      }
+  () => [cargo.owner_id, cargo.user_cargo_id, cargo.status],
+  ([owner, userCargo, status]) => {
+    if (owner && userCargo && status) {
+      Telegram.MainButton.text = "Yuborish";
+      Telegram.MainButton.show();
+    } else {
+      Telegram.MainButton.hide();
     }
   }
 );
+
+// Formani yuborish
+const onSubmit = () => {
+  sendPayload();
+};
 </script>
