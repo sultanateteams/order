@@ -2,7 +2,6 @@
   <div class="p-4">
     <b-form @submit.stop.prevent="onSubmit">
       <h1>Ro'yhatdan o'tish</h1>
-      {{ requiredFields }}
       <Inputs
         type="text"
         id="first-name"
@@ -90,14 +89,30 @@ import Inputs from "./ui/Inputs.vue";
 import { viloyat, tuman } from "../constants/regions";
 import MaskNumber from "./ui/MaskNumber.vue";
 
-const region = viloyat.map((el) => ({ ...el, value: el.id, text: el.name1 }));
+const region = viloyat
+  .map((el) => ({ ...el, value: el.number, text: el.name1 }))
+  .sort((a, b) => a.number - b.number);
+console.log(region);
 const district = ref([]);
 
 const Telegram = window.Telegram.WebApp;
 
 const queryParams = new URLSearchParams(window.location.search);
 const requiredRaw = queryParams.get("required");
-const requiredFields = requiredRaw ? requiredRaw.split("|") : [];
+const requiredFields = requiredRaw
+  ? requiredRaw.split("|")
+  : [
+      "firstName",
+      "lastName",
+      "viloyat",
+      "viloyatInfo",
+      "tuman",
+      "tumanInfo",
+      "fullAddress",
+      "birthDate",
+      "postcode",
+      "phone_number",
+    ];
 
 onMounted(() => {
   Telegram.ready();
@@ -105,8 +120,8 @@ onMounted(() => {
   Telegram.onEvent("mainButtonClicked", () => {
     const queryId = Telegram.initDataUnsafe?.query_id;
 
-    user.viloyatInfo = viloyat.find((el) => user.viloyat == el.id);
-    user.tumanInfo = tuman.find((el) => user.tuman == el.id);
+    user.viloyatInfo = viloyat.find((el) => user.viloyat == el.number);
+    user.tumanInfo = tuman.find((el) => user.tuman == el.number);
 
     const payload = JSON.stringify({ user, queryId });
 
@@ -127,8 +142,9 @@ onMounted(() => {
 
 const districtON = () => {
   district.value = tuman
-    .filter((el) => el.int01 == user.viloyat)
-    .map((el) => ({ value: el.id, text: el.name1 }));
+    .filter((el) => el.parent_number == user.viloyat)
+    .map((el) => ({ value: el.number, text: el.name1 }))
+    .sort((a, b) => a.number - b.number);
 };
 
 const user = reactive({
@@ -142,14 +158,6 @@ const user = reactive({
   birthDate: "",
   postcode: "",
   phone_number: "",
-});
-
-const regionData = computed(() => {
-  if (!!user.viloyat) {
-    return viloyat.filter((el) => el.id == user.viloyat)[0];
-  } else {
-    return {};
-  }
 });
 
 watch(
