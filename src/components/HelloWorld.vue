@@ -8,6 +8,7 @@
         id="first-name"
         title="Ism: (*majburiy)"
         v-model="user.firstName"
+        v-if="requiredFields.find('firstName')"
         :required="true"
       />
       <Inputs
@@ -15,6 +16,7 @@
         id="last-name"
         title="Sharifingiz: (*majburiy)"
         v-model="user.lastName"
+        v-if="requiredFields.find('lastName')"
         :required="true"
       />
 
@@ -26,6 +28,7 @@
           id="viloyat"
           v-model="user.viloyat"
           :options="region"
+          v-if="requiredFields.find('viloyat')"
           required
         ></b-form-select>
       </b-form-group>
@@ -34,6 +37,7 @@
         <b-form-select
           id="tuman"
           v-model="user.tuman"
+          v-if="requiredFields.find('tuman')"
           :options="district"
           :disabled="!district.length"
           required
@@ -42,6 +46,7 @@
 
       <Inputs
         type="text"
+        v-if="requiredFields.find('fullAddress')"
         id="full_address"
         title="Yashash manzilingizni aniq kiriting (mahalla, ko'cha, uy, raqam) (*ixtiyoriy)"
         v-model="user.fullAddress"
@@ -50,6 +55,7 @@
       <Inputs
         type="date"
         id="birth-date"
+        v-if="requiredFields.find('birthDate')"
         title="Tug'ilgan kuningni kiriting (*ixtiyoriy)"
         v-model="user.birthDate"
         :required="false"
@@ -57,6 +63,7 @@
       <Inputs
         type="number"
         id="postcode"
+        v-if="requiredFields.find('postcode')"
         title="Po'chta indexingizni kiriting (*ixtiyoriy)"
         v-model="user.postcode"
         :required="false"
@@ -64,6 +71,7 @@
 
       <MaskNumber
         id="phone_number"
+        v-if="requiredFields.find('phone_number')"
         title="Telefon raqamingiz (*ixtiyoriy)"
         v-model="user.phone_number"
         :required="false"
@@ -111,7 +119,7 @@ onMounted(() => {
       Telegram.sendData(payload);
     }
   });
-  console.log('working site')
+  console.log("working site");
 });
 
 const districtON = () => {
