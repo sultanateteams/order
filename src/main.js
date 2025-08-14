@@ -22,25 +22,3 @@ app.component("InputText", InputText);
 app.component("FloatLabel", FloatLabel);
 
 app.mount("#app");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
