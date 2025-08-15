@@ -1,7 +1,15 @@
 <template>
   <div class="p-4 form-wrapper">
     <h1 class="text-danger" v-if="errorText">{{ errorText }}</h1>
-
+    <div class="mb-3">
+      <b-form-radio-group
+        v-model="isUpdating"
+        :options="[
+          { text: 'Yangi qo‘shish', value: false },
+          { text: 'Yangilash', value: true },
+        ]"
+      />
+    </div>
     <div
       v-if="loading"
       class="d-flex justify-content-center align-items-center"
@@ -60,7 +68,6 @@
           </b-list-group-item>
         </b-list-group>
       </div>
-      orderSearch: {{ orderSearch }}
       <template v-if="ownerSearch">
         <!-- Qayta yozish (faqat insert) -->
         <div v-if="isUpdating" class="mb-3">
@@ -88,7 +95,6 @@
               }))
             "
             required
-            :disabled="!canEditField('status')"
           >
             <template #first>
               <b-form-select-option :value="null" disabled
@@ -183,7 +189,7 @@ const Telegram = window.Telegram.WebApp;
 const queryParams = new URLSearchParams(window.location.search);
 const org_id =
   queryParams.get("org_id") || "f67f4a71-9a10-43ae-ad9f-91d7dfa565a1";
-const isUpdating = queryParams.get("isUpdating") !== "true"; // 🔹 to'g'irlandi
+const isUpdating = ref(false);
 
 const errorText = ref("");
 const loading = ref(false);
@@ -211,17 +217,26 @@ const emptyApiFields = ref([]);
 // 🔹 foydalanuvchi o‘zgartirgan maydonlar
 const editedFields = reactive({});
 
-const canEditField = (field) => {
-  if (!isUpdating) return true; // yangi qo‘shishda ochiq
-  if (overwriteAll.value) return true; // hammasini qayta yozish belgilansa ochiq
-  if (editedFields[field] !== undefined) return true; // foydalanuvchi o‘zgartirgan bo‘lsa ochiq
-  if (emptyApiFields.value.includes(field)) return true; // API bo‘sh bergan bo‘lsa ochiq
-  return false; // aks holda blok
+const canEditField = (field: string) => {
+  // Agar yangi qo'shish rejimi bo'lsa — hamma tahrirlanadi
+  if (!isUpdating.value) return true;
+
+  // Agar "Qayta yozish" belgilangan bo'lsa — hamma tahrirlanadi
+  if (overwriteAll.value) return true;
+
+  // Foydalanuvchi shu maydonni o'zgartirgan bo'lsa — tahrirlanadi
+  if (editedFields[field] !== undefined) return true;
+
+  // API bo'sh qiymat bergan maydonlar ham tahrirlanadi
+  if (emptyApiFields.value.includes(field)) return true;
+
+  // Aks holda — blok
+  return false;
 };
 
 // 🔹 formData'dagi o‘zgarishlarni kuzatib, editedFields'ga yozish
 watch(
-  formData,
+  () => ({ ...formData }), // yoki JSON.parse(JSON.stringify(formData))
   (newVal, oldVal) => {
     for (const key in newVal) {
       if (newVal[key] !== oldVal[key]) {
@@ -231,6 +246,12 @@ watch(
   },
   { deep: true }
 );
+
+watch(isUpdating, () => {
+  for (const key in formData) {
+    formData[key] = DATE_FIELDS.includes(key) ? "" : null;
+  }
+});
 
 // Owner search
 const ownerSearch = ref("");
@@ -272,6 +293,7 @@ const selectOwner = (owner) => {
 
 // 🔹 API’dan kelgan ma’lumotlarni set qilish va bo‘shlarini belgilash
 const selectOrder = async (ord) => {
+  console.log(formData);
   emptyApiFields.value = [];
 
   if (ord.owner_id) {
@@ -294,6 +316,8 @@ const selectOrder = async (ord) => {
       emptyApiFields.value.push(key);
     }
   }
+
+  console.log(formData);
 
   showOrderDropdown.value = false;
   await nextTick();
