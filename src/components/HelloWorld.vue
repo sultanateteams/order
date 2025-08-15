@@ -341,7 +341,7 @@ const sendPayload = () => {
   }
 };
 
-const onSubmit = () => sendPayload();
+sendPayload();
 
 onMounted(async () => {
   Telegram.ready();
