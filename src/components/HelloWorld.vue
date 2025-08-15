@@ -236,7 +236,7 @@ const canEditField = (field: string) => {
 
 // 🔹 formData'dagi o‘zgarishlarni kuzatib, editedFields'ga yozish
 watch(
-  () => ({ ...formData }), // yoki JSON.parse(JSON.stringify(formData))
+  formData,
   (newVal, oldVal) => {
     for (const key in newVal) {
       if (newVal[key] !== oldVal[key]) {
@@ -293,7 +293,6 @@ const selectOwner = (owner) => {
 
 // 🔹 API’dan kelgan ma’lumotlarni set qilish va bo‘shlarini belgilash
 const selectOrder = async (ord) => {
-  console.log(formData);
   emptyApiFields.value = [];
 
   if (ord.owner_id) {
@@ -316,8 +315,6 @@ const selectOrder = async (ord) => {
       emptyApiFields.value.push(key);
     }
   }
-
-  console.log(formData);
 
   showOrderDropdown.value = false;
   await nextTick();

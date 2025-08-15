@@ -12,6 +12,7 @@
       :readonly="readonly"
       :disabled="readonly"
     ></b-form-input>
+
     <b-form-invalid-feedback v-if="required && !validationState">
       {{ errorMessage }}
     </b-form-invalid-feedback>
