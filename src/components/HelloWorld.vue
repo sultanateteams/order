@@ -177,6 +177,7 @@
           :readonly="!canEditField('price')"
         />
       </template>
+      <button type="submit">Tayyor</button>
     </b-form>
   </div>
 </template>
@@ -352,7 +353,6 @@ const sendPayload = () => {
 };
 
 const onSubmit = () => sendPayload();
-onSubmit();
 onMounted(async () => {
   Telegram.ready();
   loading.value = true;
