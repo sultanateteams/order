@@ -1,9 +1,7 @@
 <template>
   <div class="p-4 form-wrapper">
-    <!-- Xato matni -->
     <h1 class="text-danger" v-if="errorText">{{ errorText }}</h1>
 
-    <!-- Loader -->
     <div
       v-if="loading"
       class="d-flex justify-content-center align-items-center"
@@ -12,29 +10,26 @@
       <span class="ms-2">Ma'lumotlar yuklanmoqda...</span>
     </div>
 
-    <b-form @submit.stop.prevent="onSubmit" v-else>
-      <h1>Yuk Ma'lumotlari</h1>
+    <b-form v-else @submit.stop.prevent="onSubmit">
+      <h1>{{ isUpdating ? "Yangilash" : "Yangi yuk ma'lumotlari" }}</h1>
 
-      <!-- Qidirishli Yuk egasi tanlash -->
+      <!-- Owner qidirish -->
       <div class="mb-3">
-        <label for="owner_id" class="form-label">Yuk egasi</label>
+        <label class="form-label">Yuk egasi</label>
         <b-form-input
-          id="owner_id"
-          v-model="search"
-          placeholder="User ID yoki ism familiya bilan qidirish..."
-          @focus="showDropdown = true"
-          @input="showDropdown = true"
-        ></b-form-input>
-
+          v-model="ownerSearch"
+          placeholder="User ID yoki ism..."
+          @focus="showOwnerDropdown = true"
+        />
         <b-list-group
-          v-if="showDropdown && filteredOptions.length"
+          v-if="showOwnerDropdown && filteredOwners.length"
           style="max-height: 200px; overflow-y: auto"
         >
           <b-list-group-item
-            v-for="opt in filteredOptions"
+            v-for="opt in filteredOwners"
             :key="opt.id"
             action
-            @click="selectOption(opt)"
+            @click="selectOwner(opt)"
           >
             <strong>{{ opt.user_id }}</strong> — {{ opt.first_name }}
             {{ opt.last_name }}
@@ -42,21 +37,50 @@
         </b-list-group>
       </div>
 
-      <!-- Faqat yuk egasi tanlangandan keyin boshqa maydonlar chiqadi -->
-      <template v-if="cargo.owner_id">
+      <!-- Order qidirish (faqat update bo‘lsa) -->
+      <div class="mb-3" v-if="isUpdating">
+        <label class="form-label">Buyurtma</label>
+        <b-form-input
+          v-model="orderSearch"
+          placeholder="Order ID yoki yuk ID..."
+          @focus="showOrderDropdown = true"
+        />
+        <b-list-group
+          v-if="showOrderDropdown && filteredOrders.length"
+          style="max-height: 200px; overflow-y: auto"
+        >
+          <b-list-group-item
+            v-for="ord in filteredOrders"
+            :key="ord.id"
+            action
+            @click="selectOrder(ord)"
+          >
+            {{ ord.owner_id }} - <strong>{{ ord.user_cargo_id }}</strong> —
+            {{ ord.barcode }}
+          </b-list-group-item>
+        </b-list-group>
+      </div>
+      orderSearch: {{ orderSearch }}
+      <template v-if="ownerSearch">
+        <!-- Qayta yozish (faqat insert) -->
+        <div v-if="isUpdating" class="mb-3">
+          <b-form-checkbox v-model="overwriteAll">
+            Qayta yozish (owner_id dan tashqari barcha maydonlar)
+          </b-form-checkbox>
+        </div>
+
+        <!-- Form inputs -->
         <Inputs
+          v-model="formData.user_cargo_id"
           type="text"
           id="user_cargo_id"
           title="Foydalanuvchi yuk IDsi"
-          v-model="cargo.user_cargo_id"
-          :required="true"
+          :readonly="!canEditField('user_cargo_id')"
         />
 
-        <!-- Yuk holati -->
-        <b-form-group label="Yuk holati" label-for="status">
+        <b-form-group label="Yuk holati">
           <b-form-select
-            id="status"
-            v-model="cargo.status"
+            v-model="formData.status"
             :options="
               statusOptions.map((opt) => ({
                 value: opt.number,
@@ -64,166 +88,226 @@
               }))
             "
             required
+            :disabled="!canEditField('status')"
           >
             <template #first>
-              <b-form-select-option :value="null" disabled>
-                Holatni tanlang...
-              </b-form-select-option>
+              <b-form-select-option :value="null" disabled
+                >Holatni tanlang...</b-form-select-option
+              >
             </template>
           </b-form-select>
         </b-form-group>
 
         <Inputs
+          v-model="formData.in_stage_china"
           type="date"
           id="in_stage_china"
-          title="Xitoyga omborga kelgan vaqt"
-          v-model="cargo.in_stage_china"
+          title="Xitoyga kelgan"
+          :readonly="!canEditField('in_stage_china')"
         />
-
         <Inputs
+          v-model="formData.stage_china_number"
           type="text"
           id="stage_china_number"
           title="Xitoy ombor nomi"
-          v-model="cargo.stage_china_number"
+          :readonly="!canEditField('stage_china_number')"
         />
-
         <Inputs
+          v-model="formData.barcode"
           type="number"
           id="barcode"
           title="Shtrix-kod"
-          v-model="cargo.barcode"
+          :readonly="!canEditField('barcode')"
         />
-
         <Inputs
+          v-model="formData.out_stage_china"
           type="date"
           id="out_stage_china"
-          title="Xitoydan ombordan ketgan vaqt"
-          v-model="cargo.out_stage_china"
+          title="Xitoydan ketgan"
+          :readonly="!canEditField('out_stage_china')"
         />
-
         <Inputs
+          v-model="formData.in_stage_uzb"
           type="date"
           id="in_stage_uzb"
-          title="O'zbekistonga kelgan vaqt"
-          v-model="cargo.in_stage_uzb"
+          title="O'zbekistonga kelgan"
+          :readonly="!canEditField('in_stage_uzb')"
         />
-
         <Inputs
+          v-model="formData.stage_number_uzbekistan"
           type="text"
           id="stage_number_uzbekistan"
-          title="O'zbekistondagi ombor nomi"
-          v-model="cargo.stage_number_uzbekistan"
+          title="O'zbek ombor nomi"
+          :readonly="!canEditField('stage_number_uzbekistan')"
         />
-
         <Inputs
+          v-model="formData.submitted_at"
           type="date"
           id="submitted_at"
-          title="Mijoz qabul qilgan vaqt"
-          v-model="cargo.submitted_at"
+          title="Mijoz olgan vaqt"
+          :readonly="!canEditField('submitted_at')"
         />
-
         <Inputs
+          v-model="formData.volume"
           type="number"
           step="0.01"
           id="volume"
           title="Hajmi (m³)"
-          v-model="cargo.volume"
+          :readonly="!canEditField('volume')"
         />
-
         <Inputs
+          v-model="formData.weight"
           type="number"
           step="0.01"
           id="weight"
           title="Og'irligi (kg)"
-          v-model="cargo.weight"
+          :readonly="!canEditField('weight')"
         />
-
         <Inputs
+          v-model="formData.price"
           type="number"
           id="price"
           title="Narxi (so'm)"
-          v-model="cargo.price"
+          :readonly="!canEditField('price')"
         />
       </template>
     </b-form>
   </div>
 </template>
-
 <script lang="ts" setup>
-import { reactive, ref, onMounted, watch, computed } from "vue";
+import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
 import Inputs from "./ui/Inputs.vue";
 import supabase from "../config/supabazaClient";
 
 const Telegram = window.Telegram.WebApp;
 const queryParams = new URLSearchParams(window.location.search);
 const org_id =
-  queryParams.get("org_id") || "f67f4a71-9a10-43ae-ad9f-91d7dfa565a1" || null;
-const requiredRaw = queryParams.get("required");
-const requiredFields = requiredRaw
-  ? requiredRaw.split("|")
-  : [
-      "owner_id",
-      "user_cargo_id",
-      "status",
-      "in_stage_china",
-      "stage_china_number",
-      "barcode",
-      "out_stage_china",
-      "in_stage_uzb",
-      "stage_number_uzbekistan",
-      "submitted_at",
-      "volume",
-      "weight",
-      "price",
-    ];
+  queryParams.get("org_id") || "f67f4a71-9a10-43ae-ad9f-91d7dfa565a1";
+const isUpdating = queryParams.get("isUpdating") !== "true"; // 🔹 to'g'irlandi
 
 const errorText = ref("");
 const loading = ref(false);
+const overwriteAll = ref(false);
 
-const cargo = reactive({
+const formData = reactive({
   owner_id: null,
   user_cargo_id: null,
   status: null,
-  in_stage_china: null,
+  in_stage_china: "",
   stage_china_number: null,
   barcode: null,
-  out_stage_china: null,
-  in_stage_uzb: null,
+  out_stage_china: "",
+  in_stage_uzb: "",
   stage_number_uzbekistan: null,
-  submitted_at: null,
+  submitted_at: "",
   volume: null,
   weight: null,
   price: null,
 });
 
-// Qidirish uchun o‘zgaruvchilar
-const search = ref("");
-const showDropdown = ref(false);
-const options = ref([]);
-const statusOptions = ref([]);
+// 🔹 API bo'sh bergan maydonlarni saqlash
+const emptyApiFields = ref([]);
 
-// Filtrlash
-const filteredOptions = computed(() => {
-  const term = search.value.toLowerCase();
-  return options.value.filter(
-    (u) =>
-      u.user_id?.toString().toLowerCase().includes(term) ||
-      u.first_name?.toLowerCase().includes(term) ||
-      u.last_name?.toLowerCase().includes(term)
-  );
-});
+// 🔹 foydalanuvchi o‘zgartirgan maydonlar
+const editedFields = reactive({});
 
-// Tanlash
-const selectOption = (opt) => {
-  cargo.owner_id = opt.user_id;
-  search.value = `${opt.user_id} — ${opt.first_name} ${opt.last_name}`;
-  showDropdown.value = false;
+const canEditField = (field) => {
+  if (!isUpdating) return true; // yangi qo‘shishda ochiq
+  if (overwriteAll.value) return true; // hammasini qayta yozish belgilansa ochiq
+  if (editedFields[field] !== undefined) return true; // foydalanuvchi o‘zgartirgan bo‘lsa ochiq
+  if (emptyApiFields.value.includes(field)) return true; // API bo‘sh bergan bo‘lsa ochiq
+  return false; // aks holda blok
 };
 
-// Payload yuborish funksiyasi
+// 🔹 formData'dagi o‘zgarishlarni kuzatib, editedFields'ga yozish
+watch(
+  formData,
+  (newVal, oldVal) => {
+    for (const key in newVal) {
+      if (newVal[key] !== oldVal[key]) {
+        editedFields[key] = newVal[key];
+      }
+    }
+  },
+  { deep: true }
+);
+
+// Owner search
+const ownerSearch = ref("");
+const showOwnerDropdown = ref(false);
+const owners = ref([]);
+const filteredOwners = computed(() =>
+  owners.value.filter((o) =>
+    `${o.user_id} ${o.first_name} ${o.last_name}`
+      .toLowerCase()
+      .includes(ownerSearch.value.toLowerCase())
+  )
+);
+
+// Order search
+const orderSearch = ref("");
+const showOrderDropdown = ref(false);
+const ordersList = ref([]);
+const filteredOrders = computed(() =>
+  ordersList.value.filter((o) =>
+    `${o.barcode} ${o.user_cargo_id} ${o.owner_id}`
+      .toLowerCase()
+      .includes(orderSearch.value.toLowerCase())
+  )
+);
+
+const statusOptions = ref([]);
+const DATE_FIELDS = [
+  "in_stage_china",
+  "out_stage_china",
+  "in_stage_uzb",
+  "submitted_at",
+];
+
+const selectOwner = (owner) => {
+  formData.owner_id = owner.user_id;
+  ownerSearch.value = `${owner.user_id} — ${owner.first_name} ${owner.last_name}`;
+  showOwnerDropdown.value = false;
+};
+
+// 🔹 API’dan kelgan ma’lumotlarni set qilish va bo‘shlarini belgilash
+const selectOrder = async (ord) => {
+  emptyApiFields.value = [];
+
+  if (ord.owner_id) {
+    formData.owner_id = ord.owner_id;
+    const owner = owners.value.find((o) => o.user_id === ord.owner_id);
+    if (owner) {
+      ownerSearch.value = `${owner.user_id} — ${owner.first_name} ${owner.last_name}`;
+    }
+  }
+
+  for (const key in formData) {
+    const val = DATE_FIELDS.includes(key)
+      ? toDateInput(ord[key])
+      : ord[key] ?? null;
+
+    formData[key] = val;
+
+    // API bo'sh qiymat berganini saqlash
+    if (!val) {
+      emptyApiFields.value.push(key);
+    }
+  }
+
+  showOrderDropdown.value = false;
+  await nextTick();
+};
+
+// Send only edited fields if updating
 const sendPayload = () => {
   const queryId = Telegram.initDataUnsafe?.query_id;
-  const payload = JSON.stringify({ cargo, queryId });
+  const payloadData = isUpdating ? editedFields : formData;
+
+  const payload = JSON.stringify({
+    order: { ...payloadData, isUpdating },
+    queryId,
+  });
 
   if (queryId) {
     fetch("https://telegram-bota-da4625226d63.herokuapp.com/web-data", {
@@ -236,64 +320,46 @@ const sendPayload = () => {
   }
 };
 
-// Telegram button tayyorlash
+const onSubmit = () => sendPayload();
+
 onMounted(async () => {
   Telegram.ready();
-
-  Telegram.onEvent("mainButtonClicked", sendPayload);
-
   loading.value = true;
-  if (org_id) {
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, user_id, first_name, last_name")
-      .eq("state", 1)
-      .eq("org_id", org_id)
-      .neq("user_id", null);
 
-    if (error) {
-      errorText.value =
-        "Supabase xato: " + (error.message || JSON.stringify(error));
-    } else {
-      options.value = data || [];
-    }
-  } else {
-    errorText.value = "Organization ID not found";
+  const { data: ownersData } = await supabase
+    .from("users")
+    .select("id, user_id, first_name, last_name")
+    .eq("state", 1)
+    .eq("org_id", org_id)
+    .neq("user_id", null);
+  if (ownersData) owners.value = ownersData;
+
+  if (isUpdating) {
+    const { data: ordersData, error: ordersError } = await supabase.rpc(
+      "get_cargo_orders",
+      { p_org_id: org_id }
+    );
+    if (ordersError) console.error("RPC xatolik:", ordersError);
+    if (ordersData) ordersList.value = ordersData;
   }
 
-  const { data: statusData, error: statusError } = await supabase
+  const { data: statusData } = await supabase
     .from("lists")
     .select("*")
     .eq("state", 1)
     .eq("type_id", 6);
+  if (statusData) statusOptions.value = statusData;
 
-  if (statusError) {
-    errorText.value =
-      "Supabase xato: " + (statusError.message || JSON.stringify(statusError));
-  } else {
-    console.log(statusData);
-    statusOptions.value = statusData || [];
-  }
   loading.value = false;
 });
 
-// Tugma ko‘rsatish
-watch(
-  () => [cargo.owner_id, cargo.user_cargo_id, cargo.status],
-  ([owner, userCargo, status]) => {
-    if (owner && userCargo && status) {
-      Telegram.MainButton.text = "Yuborish";
-      Telegram.MainButton.show();
-    } else {
-      Telegram.MainButton.hide();
-    }
-  }
-);
-
-// Formani yuborish
-const onSubmit = () => {
-  sendPayload();
-};
+function toDateInput(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}`;
+}
 </script>
 
 <style scoped>

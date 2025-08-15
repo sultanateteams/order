@@ -9,6 +9,8 @@
       @input="updateValue"
       :state="validationState"
       :type="supportedType"
+      :readonly="readonly"
+      :disabled="readonly"
     ></b-form-input>
 
     <b-form-invalid-feedback v-if="required && !validationState">
@@ -27,6 +29,7 @@ const props = defineProps<{
   title: string;
   required?: boolean;
   type: string;
+  readonly: boolean;
 }>();
 
 const emit = defineEmits(["update:modelValue"]);
