@@ -213,6 +213,7 @@ const loading = ref(false);
 const overwriteAll = ref(false);
 
 const formData = reactive({
+  id: null,
   owner_id: null,
   user_cargo_id: null,
   status: null,
