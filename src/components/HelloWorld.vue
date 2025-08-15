@@ -68,7 +68,7 @@
           </b-list-group-item>
         </b-list-group>
       </div>
-      <template v-if="ownerSearch">
+      <template v-if="formData.status || !isUpdating">
         <!-- Qayta yozish (faqat insert) -->
         <div v-if="isUpdating" class="mb-3">
           <b-form-checkbox v-model="overwriteAll">
@@ -170,11 +170,11 @@
           :readonly="!canEditField('weight')"
         />
         <Inputs
-          v-model="formData.price"
+          v-model="formData.paid_sum"
           type="number"
-          id="price"
+          id="paid_sum"
           title="Narxi (so'm)"
-          :readonly="!canEditField('price')"
+          :readonly="!canEditField('paid_sum')"
         />
       </template>
       <b-button
@@ -226,7 +226,7 @@ const formData = reactive({
   submitted_at: "",
   volume: null,
   weight: null,
-  price: null,
+  paid_sum: null,
 });
 
 // 🔹 API bo'sh bergan maydonlarni saqlash
@@ -381,6 +381,7 @@ onMounted(async () => {
     );
     if (ordersError) console.error("RPC xatolik:", ordersError);
     if (ordersData) ordersList.value = ordersData;
+    console.log(ordersData);
   }
 
   const { data: statusData } = await supabase
