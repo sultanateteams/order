@@ -333,11 +333,11 @@ const sendPayload = () => {
 
   // reactive object → plain object
   const cleanData = JSON.parse(
-    JSON.stringify(toRaw(isUpdating.value ? editedFields : formData))
+    JSON.stringify(toRaw(!isUpdating.value ? editedFields : formData))
   );
 
   const payload = JSON.stringify({
-    order: { ...cleanData, isUpdating: isUpdating.value },
+    order: { formData, isUpdating: isUpdating.value },
     queryId,
   });
 
