@@ -177,7 +177,15 @@
           :readonly="!canEditField('price')"
         />
       </template>
-      <button type="submit">Tayyor</button>
+      <b-button
+        type="submit"
+        variant="primary"
+        class="w-100 d-flex align-items-center justify-content-center gap-2"
+        :disabled="loading"
+      >
+        <b-spinner small v-if="loading"></b-spinner>
+        <span>{{ loading ? "Yuborilmoqda..." : "Tayyor" }}</span>
+      </b-button>
     </b-form>
   </div>
 </template>
