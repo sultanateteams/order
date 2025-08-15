@@ -181,7 +181,15 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  nextTick,
+  watch,
+  toRaw,
+} from "vue";
 import Inputs from "./ui/Inputs.vue";
 import supabase from "../config/supabazaClient";
 
@@ -315,18 +323,20 @@ const selectOrder = async (ord) => {
       emptyApiFields.value.push(key);
     }
   }
-
   showOrderDropdown.value = false;
   await nextTick();
 };
 
-// Send only edited fields if updating
 const sendPayload = () => {
   const queryId = Telegram.initDataUnsafe?.query_id;
-  const payloadData = isUpdating ? editedFields : formData;
+
+  // reactive object → plain object
+  const cleanData = JSON.parse(
+    JSON.stringify(toRaw(isUpdating.value ? editedFields : formData))
+  );
 
   const payload = JSON.stringify({
-    order: { ...payloadData, isUpdating },
+    order: { ...cleanData, isUpdating: isUpdating.value },
     queryId,
   });
 
@@ -341,8 +351,8 @@ const sendPayload = () => {
   }
 };
 
-sendPayload();
-
+const onSubmit = () => sendPayload();
+onSubmit();
 onMounted(async () => {
   Telegram.ready();
   loading.value = true;
